@@ -1,0 +1,121 @@
+name: Repository Backup
+
+on:
+  schedule:
+    - cron: "0 1 * * 0"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  backup:
+
+    name: Repository Backup
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout Repository
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #########################################
+      # Create Backup Directory
+      #########################################
+
+      - name: Prepare Backup Directory
+        run: |
+          mkdir -p backup
+
+      #########################################
+      # Git Bundle Backup
+      #########################################
+
+      - name: Create Git Bundle
+        run: |
+          git bundle create backup/repository.bundle --all
+
+      #########################################
+      # Source Code Archive
+      #########################################
+
+      - name: Create ZIP Archive
+        run: |
+          zip -r backup/repository-source.zip . \
+            -x ".git/*" \
+            -x "backup/*"
+
+      #########################################
+      # Generate Checksums
+      #########################################
+
+      - name: Generate SHA256 Checksums
+        run: |
+          cd backup
+          sha256sum repository.bundle > SHA256SUMS
+          sha256sum repository-source.zip >> SHA256SUMS
+
+      #########################################
+      # Backup Metadata
+      #########################################
+
+      - name: Generate Metadata
+        run: |
+          cat <<EOF > backup/metadata.txt
+          Repository : ${{ github.repository }}
+          Branch     : ${{ github.ref_name }}
+          Commit     : ${{ github.sha }}
+          Workflow   : ${{ github.workflow }}
+          Run ID     : ${{ github.run_id }}
+          Backup UTC : $(date -u)
+          Retention  : 90 Days
+          EOF
+
+      #########################################
+      # Upload Backup
+      #########################################
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-backup
+          path: backup/
+          retention-days: 90
+
+      #########################################
+      # GitHub Step Summary
+      #########################################
+
+      - name: Publish Summary
+        run: |
+          {
+            echo "# Repository Backup Summary"
+            echo ""
+            echo "## Backup Contents"
+            echo ""
+            echo "- Git bundle"
+            echo "- Source ZIP archive"
+            echo "- SHA256 checksums"
+            echo "- Backup metadata"
+            echo ""
+            echo "Retention: **90 Days**"
+            echo ""
+            echo "Backup completed successfully."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      #########################################
+      # Completion
+      #########################################
+
+      - name: Backup Complete
+        run: |
+          echo "Repository backup completed successfully."

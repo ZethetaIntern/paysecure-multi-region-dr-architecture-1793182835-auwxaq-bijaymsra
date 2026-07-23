@@ -1,0 +1,144 @@
+name: Repository Report
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  repository-report:
+
+    name: Repository Inventory Report
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout Repository
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #########################################
+      # Collect Repository Inventory
+      #########################################
+
+      - name: Collect Statistics
+        id: stats
+        shell: bash
+        run: |
+          echo "docs=$(find docs -type f -name '*.md' | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "terraform_modules=$(find terraform/modules -mindepth 1 -maxdepth 1 -type d | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "terraform_files=$(find terraform -type f -name '*.tf' | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "workflows=$(find .github/workflows -type f -name '*.yml' | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "scripts=$(find scripts -type f | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "markdown=$(find . -type f -name '*.md' | wc -l)" >> "$GITHUB_OUTPUT"
+
+      #########################################
+      # Generate Repository Report
+      #########################################
+
+      - name: Generate Report
+        run: |
+          cat <<EOF > repository-report.md
+          # Repository Inventory Report
+
+          ## General Information
+
+          | Item | Value |
+          |------|------:|
+          | Repository | ${{ github.repository }} |
+          | Branch | ${{ github.ref_name }} |
+          | Commit | ${{ github.sha }} |
+          | Generated (UTC) | $(date -u) |
+
+          ## Documentation
+
+          | Metric | Count |
+          |--------|------:|
+          | Markdown Files | ${{ steps.stats.outputs.markdown }} |
+          | Documentation Files | ${{ steps.stats.outputs.docs }} |
+
+          ## Terraform
+
+          | Metric | Count |
+          |--------|------:|
+          | Modules | ${{ steps.stats.outputs.terraform_modules }} |
+          | Terraform Files | ${{ steps.stats.outputs.terraform_files }} |
+
+          ## GitHub
+
+          | Metric | Count |
+          |--------|------:|
+          | Workflow Files | ${{ steps.stats.outputs.workflows }} |
+
+          ## Automation
+
+          | Metric | Count |
+          |--------|------:|
+          | Scripts | ${{ steps.stats.outputs.scripts }} |
+
+          ## Directory Structure
+
+          \`\`\`
+          .
+          ├── docs/
+          ├── terraform/
+          │   ├── environments/
+          │   └── modules/
+          ├── scripts/
+          └── .github/
+              └── workflows/
+          \`\`\`
+
+          EOF
+
+      #########################################
+      # Upload Report
+      #########################################
+
+      - name: Upload Repository Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-report
+          path: repository-report.md
+          retention-days: 30
+
+      #########################################
+      # Publish Summary
+      #########################################
+
+      - name: Publish Step Summary
+        run: |
+          {
+            echo "# Repository Report"
+            echo ""
+            echo "## Inventory Summary"
+            echo ""
+            echo "| Component | Count |"
+            echo "|-----------|------:|"
+            echo "| Documentation | ${{ steps.stats.outputs.docs }} |"
+            echo "| Terraform Modules | ${{ steps.stats.outputs.terraform_modules }} |"
+            echo "| Terraform Files | ${{ steps.stats.outputs.terraform_files }} |"
+            echo "| Workflow Files | ${{ steps.stats.outputs.workflows }} |"
+            echo "| Scripts | ${{ steps.stats.outputs.scripts }} |"
+            echo ""
+            echo "Repository inventory report generated successfully."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      #########################################
+      # Completion
+      #########################################
+
+      - name: Report Complete
+        run: |
+          echo "Repository report generated successfully."

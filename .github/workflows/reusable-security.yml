@@ -1,0 +1,97 @@
+name: Reusable Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      scan_path:
+        description: Directory to scan
+        required: false
+        default: "."
+        type: string
+
+      upload_sarif:
+        description: Upload SARIF results
+        required: false
+        default: true
+        type: boolean
+
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+
+  security:
+
+    name: Security Scan
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Trivy Filesystem Scan
+      #########################################
+
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: ${{ inputs.scan_path }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+
+      #########################################
+      # Gitleaks Secret Scan
+      #########################################
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      #########################################
+      # Upload Trivy SARIF
+      #########################################
+
+      - name: Upload Trivy SARIF
+        if: inputs.upload_sarif
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+      #########################################
+      # Upload Scan Reports
+      #########################################
+
+      - name: Upload Security Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            trivy-results.sarif
+            gitleaks-report.json
+          if-no-files-found: ignore
+
+      #########################################
+      # Summary
+      #########################################
+
+      - name: Security Scan Summary
+        run: |
+          echo "Reusable security scan completed."
+          echo "Filesystem vulnerabilities scanned with Trivy."
+          echo "Secrets scanned with Gitleaks."

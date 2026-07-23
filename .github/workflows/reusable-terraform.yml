@@ -1,0 +1,127 @@
+name: Reusable Terraform Workflow
+
+on:
+  workflow_call:
+    inputs:
+      terraform_version:
+        description: Terraform version
+        required: false
+        default: "1.8.5"
+        type: string
+
+      working_directory:
+        description: Terraform working directory
+        required: true
+        type: string
+
+      apply:
+        description: Apply Terraform changes
+        required: false
+        default: false
+        type: boolean
+
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+
+  terraform:
+
+    name: Terraform
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      TF_IN_AUTOMATION: true
+
+    steps:
+
+      #########################################
+      # Checkout
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Setup Terraform
+      #########################################
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      #########################################
+      # Terraform Format
+      #########################################
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      #########################################
+      # Terraform Init
+      #########################################
+
+      - name: Terraform Init
+        run: terraform init
+
+      #########################################
+      # Terraform Validate
+      #########################################
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      #########################################
+      # Terraform Plan
+      #########################################
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      #########################################
+      # Upload Plan
+      #########################################
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: ${{ inputs.working_directory }}/tfplan
+          if-no-files-found: error
+
+      #########################################
+      # Terraform Apply
+      #########################################
+
+      - name: Terraform Apply
+        if: inputs.apply
+        run: terraform apply -auto-approve tfplan
+
+      #########################################
+      # Summary
+      #########################################
+
+      - name: Workflow Summary
+        run: |
+          echo "Terraform workflow completed successfully."
+          echo "Working Directory: ${{ inputs.working_directory }}"
+          echo "Terraform Version: ${{ inputs.terraform_version }}"
+          echo "Apply Executed: ${{ inputs.apply }}"

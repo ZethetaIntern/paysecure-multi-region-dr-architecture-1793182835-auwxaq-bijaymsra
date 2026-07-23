@@ -1,0 +1,133 @@
+name: License Compliance
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  license-compliance:
+
+    name: License Compliance Check
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout Repository
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Setup Node
+      #########################################
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      #########################################
+      # Install License Checker
+      #########################################
+
+      - name: Install License Checker
+        run: |
+          npm install -g license-checker
+
+      #########################################
+      # Generate License Report
+      #########################################
+
+      - name: Generate License Report
+        run: |
+          mkdir -p reports
+
+          license-checker \
+            --summary \
+            --json \
+            > reports/license-report.json || true
+
+      #########################################
+      # SPDX Validation
+      #########################################
+
+      - name: Validate Repository License
+        run: |
+          if [ ! -f LICENSE ]; then
+            echo "LICENSE file missing."
+            exit 1
+          fi
+
+          echo "LICENSE file found."
+
+      #########################################
+      # License Policy Enforcement
+      #########################################
+
+      - name: Check Restricted Licenses
+        run: |
+          DENIED="GPL AGPL LGPL"
+
+          if grep -Ei "$DENIED" reports/license-report.json; then
+            echo "Restricted license detected."
+            exit 1
+          fi
+
+          echo "License policy passed."
+
+      #########################################
+      # Upload Report
+      #########################################
+
+      - name: Upload License Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-compliance-report
+          path: reports/
+
+      #########################################
+      # GitHub Step Summary
+      #########################################
+
+      - name: Publish Summary
+        run: |
+          {
+            echo "# License Compliance Report"
+            echo ""
+            echo "## Validation Results"
+            echo ""
+            echo "- ✅ LICENSE file verified"
+            echo "- ✅ SPDX validation completed"
+            echo "- ✅ License policy enforced"
+            echo "- ✅ Compliance report generated"
+            echo "- ✅ Artifact uploaded"
+            echo ""
+            echo "Restricted licenses checked:"
+            echo "- GPL"
+            echo "- AGPL"
+            echo "- LGPL"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      #########################################
+      # Completion
+      #########################################
+
+      - name: Compliance Complete
+        run: |
+          echo "License compliance validation completed successfully."

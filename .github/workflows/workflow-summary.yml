@@ -1,0 +1,176 @@
+name: Workflow Summary Dashboard
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  workflow-dashboard:
+
+    name: Workflow Dashboard
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout Repository
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Collect Workflow Statistics
+      #########################################
+
+      - name: Collect Statistics
+        id: stats
+        shell: bash
+        run: |
+          TOTAL=$(find .github/workflows -name "*.yml" | wc -l)
+
+          SECURITY=$(find .github/workflows \
+            -iname "*security*" \
+            -o -iname "*secret*" \
+            -o -iname "*codeql*" \
+            -o -iname "*scorecard*" \
+            | wc -l)
+
+          COMPLIANCE=$(find .github/workflows \
+            -iname "*compliance*" \
+            -o -iname "*license*" \
+            -o -iname "*dependency*" \
+            | wc -l)
+
+          MAINTENANCE=$(find .github/workflows \
+            -iname "*cleanup*" \
+            -o -iname "*metrics*" \
+            -o -iname "*health*" \
+            -o -iname "*report*" \
+            | wc -l)
+
+          REUSABLE=$(find .github/workflows \
+            -iname "reusable-*.yml" \
+            | wc -l)
+
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "security=$SECURITY" >> "$GITHUB_OUTPUT"
+          echo "compliance=$COMPLIANCE" >> "$GITHUB_OUTPUT"
+          echo "maintenance=$MAINTENANCE" >> "$GITHUB_OUTPUT"
+          echo "reusable=$REUSABLE" >> "$GITHUB_OUTPUT"
+
+      #########################################
+      # Generate Dashboard
+      #########################################
+
+      - name: Generate Dashboard
+        run: |
+          cat <<EOF > workflow-dashboard.md
+          # GitHub Actions Dashboard
+
+          ## Repository
+
+          - Repository: ${{ github.repository }}
+          - Branch: ${{ github.ref_name }}
+          - Generated: $(date -u)
+
+          ---
+
+          ## Workflow Statistics
+
+          | Category | Count |
+          |----------|------:|
+          | Total Workflows | ${{ steps.stats.outputs.total }} |
+          | Security | ${{ steps.stats.outputs.security }} |
+          | Compliance | ${{ steps.stats.outputs.compliance }} |
+          | Maintenance | ${{ steps.stats.outputs.maintenance }} |
+          | Reusable | ${{ steps.stats.outputs.reusable }} |
+
+          ---
+
+          ## Workflow Categories
+
+          ### CI/CD
+
+          - Terraform
+          - Docker
+          - Build
+          - Release
+
+          ### Security
+
+          - CodeQL
+          - Secret Scanning
+          - Dependency Review
+          - Scorecards
+          - License Compliance
+
+          ### Compliance
+
+          - Repository Compliance
+          - Dependency Submission
+
+          ### Maintenance
+
+          - Cleanup
+          - Repository Health
+          - Metrics
+          - Reports
+          - Backup
+
+          ### Reusable
+
+          - Terraform
+          - Security
+          - Build
+          - Release
+          - Docker
+          - Notification
+
+          EOF
+
+      #########################################
+      # Upload Dashboard
+      #########################################
+
+      - name: Upload Dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-dashboard
+          path: workflow-dashboard.md
+          retention-days: 30
+
+      #########################################
+      # Publish GitHub Summary
+      #########################################
+
+      - name: Publish Summary
+        run: |
+          {
+            echo "# Workflow Dashboard"
+            echo ""
+            echo "| Category | Count |"
+            echo "|----------|------:|"
+            echo "| Total Workflows | ${{ steps.stats.outputs.total }} |"
+            echo "| Security | ${{ steps.stats.outputs.security }} |"
+            echo "| Compliance | ${{ steps.stats.outputs.compliance }} |"
+            echo "| Maintenance | ${{ steps.stats.outputs.maintenance }} |"
+            echo "| Reusable | ${{ steps.stats.outputs.reusable }} |"
+            echo ""
+            echo "Repository workflow dashboard generated successfully."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      #########################################
+      # Completion
+      #########################################
+
+      - name: Dashboard Complete
+        run: |
+          echo "Workflow dashboard generated successfully."

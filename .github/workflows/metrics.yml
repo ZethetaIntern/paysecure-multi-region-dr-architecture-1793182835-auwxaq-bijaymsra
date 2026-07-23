@@ -1,0 +1,150 @@
+name: Repository Metrics
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  metrics:
+
+    name: Repository Metrics Collection
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout Repository
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #########################################
+      # Collect Repository Metrics
+      #########################################
+
+      - name: Repository Statistics
+        id: repository
+        shell: bash
+        run: |
+          echo "commits=$(git rev-list --all --count)" >> "$GITHUB_OUTPUT"
+          echo "branches=$(git branch -a | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "tags=$(git tag | wc -l)" >> "$GITHUB_OUTPUT"
+
+      #########################################
+      # Documentation Metrics
+      #########################################
+
+      - name: Documentation Metrics
+        id: docs
+        shell: bash
+        run: |
+          echo "docs=$(find docs -type f -name '*.md' | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "readmes=$(find . -type f -name 'README.md' | wc -l)" >> "$GITHUB_OUTPUT"
+
+      #########################################
+      # Terraform Metrics
+      #########################################
+
+      - name: Terraform Metrics
+        id: terraform
+        shell: bash
+        run: |
+          echo "modules=$(find terraform/modules -mindepth 1 -maxdepth 1 -type d | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "tf_files=$(find terraform -type f -name '*.tf' | wc -l)" >> "$GITHUB_OUTPUT"
+
+      #########################################
+      # Workflow Metrics
+      #########################################
+
+      - name: GitHub Workflow Metrics
+        id: workflows
+        shell: bash
+        run: |
+          echo "workflows=$(find .github/workflows -type f -name '*.yml' | wc -l)" >> "$GITHUB_OUTPUT"
+
+      #########################################
+      # Generate Metrics Report
+      #########################################
+
+      - name: Generate Metrics Report
+        run: |
+          cat <<EOF > repository-metrics.md
+          # Repository Metrics
+
+          ## Repository
+
+          | Metric | Value |
+          |--------|------:|
+          | Total Commits | ${{ steps.repository.outputs.commits }} |
+          | Branches | ${{ steps.repository.outputs.branches }} |
+          | Tags | ${{ steps.repository.outputs.tags }} |
+
+          ## Documentation
+
+          | Metric | Value |
+          |--------|------:|
+          | Markdown Files | ${{ steps.docs.outputs.docs }} |
+          | README Files | ${{ steps.docs.outputs.readmes }} |
+
+          ## Terraform
+
+          | Metric | Value |
+          |--------|------:|
+          | Modules | ${{ steps.terraform.outputs.modules }} |
+          | Terraform Files | ${{ steps.terraform.outputs.tf_files }} |
+
+          ## GitHub Actions
+
+          | Metric | Value |
+          |--------|------:|
+          | Workflow Files | ${{ steps.workflows.outputs.workflows }} |
+
+          Generated: $(date -u)
+          EOF
+
+      #########################################
+      # Upload Metrics
+      #########################################
+
+      - name: Upload Metrics Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-metrics
+          path: repository-metrics.md
+
+      #########################################
+      # GitHub Step Summary
+      #########################################
+
+      - name: Publish Metrics Summary
+        run: |
+          {
+            echo "# Repository Metrics"
+            echo ""
+            echo "| KPI | Value |"
+            echo "|-----|------:|"
+            echo "| Commits | ${{ steps.repository.outputs.commits }} |"
+            echo "| Branches | ${{ steps.repository.outputs.branches }} |"
+            echo "| Tags | ${{ steps.repository.outputs.tags }} |"
+            echo "| Documentation | ${{ steps.docs.outputs.docs }} |"
+            echo "| Terraform Modules | ${{ steps.terraform.outputs.modules }} |"
+            echo "| Workflow Files | ${{ steps.workflows.outputs.workflows }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      #########################################
+      # Completion
+      #########################################
+
+      - name: Metrics Collection Complete
+        run: |
+          echo "Repository metrics collection completed successfully."

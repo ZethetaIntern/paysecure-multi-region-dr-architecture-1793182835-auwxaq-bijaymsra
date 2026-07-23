@@ -1,0 +1,87 @@
+name: GitHub Actions Lint
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - ".github/workflows/**"
+
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - ".github/workflows/**"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  actionlint:
+
+    name: Validate GitHub Actions Workflows
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Install actionlint
+      #########################################
+
+      - name: Install actionlint
+        uses: reviewdog/action-actionlint@v1
+        with:
+          fail_level: error
+
+      #########################################
+      # Validate Workflow Files
+      #########################################
+
+      - name: Run actionlint
+        run: |
+          actionlint -color
+
+      #########################################
+      # Validate YAML Syntax
+      #########################################
+
+      - name: Validate YAML
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .github/workflows
+          strict: true
+
+      #########################################
+      # Upload Results
+      #########################################
+
+      - name: Upload Lint Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: actionlint-results
+          path: |
+            .github/workflows
+          if-no-files-found: ignore
+
+      #########################################
+      # Summary
+      #########################################
+
+      - name: Workflow Validation Summary
+        run: |
+          echo "GitHub Actions workflow validation completed successfully."
+          echo "All workflow files passed syntax and configuration validation."

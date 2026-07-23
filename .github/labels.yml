@@ -1,0 +1,103 @@
+- name: bug
+  color: "d73a4a"
+  description: "Something isn't working"
+
+- name: enhancement
+  color: "a2eeef"
+  description: "New feature or improvement"
+
+- name: documentation
+  color: "0075ca"
+  description: "Documentation updates"
+
+- name: terraform
+  color: "623CE4"
+  description: "Terraform infrastructure changes"
+
+- name: infrastructure
+  color: "5319E7"
+  description: "Infrastructure-related changes"
+
+- name: aws
+  color: "FF9900"
+  description: "AWS services and cloud infrastructure"
+
+- name: security
+  color: "B60205"
+  description: "Security improvements or vulnerabilities"
+
+- name: ci
+  color: "0E8A16"
+  description: "CI/CD pipeline changes"
+
+- name: dependencies
+  color: "0366D6"
+  description: "Dependency updates"
+
+- name: question
+  color: "D876E3"
+  description: "Further information is requested"
+
+- name: good first issue
+  color: "7057FF"
+  description: "Good issue for first-time contributors"
+
+- name: help wanted
+  color: "008672"
+  description: "Extra attention is needed"
+
+- name: stale
+  color: "FBCA04"
+  description: "Marked as stale due to inactivity"
+
+- name: invalid
+  color: "E4E669"
+  description: "This issue or PR is invalid"
+
+- name: duplicate
+  color: "CFD3D7"
+  description: "This issue or PR already exists"
+
+- name: wontfix
+  color: "FFFFFF"
+  description: "This will not be worked on"
+
+- name: breaking-change
+  color: "B60205"
+  description: "Introduces a breaking change"
+
+- name: performance
+  color: "1D76DB"
+  description: "Performance optimization"
+
+- name: monitoring
+  color: "0052CC"
+  description: "Monitoring and observability"
+
+- name: kubernetes
+  color: "326CE5"
+  description: "Kubernetes-related changes"
+
+- name: devops
+  color: "24292F"
+  description: "DevOps tooling and automation"
+
+- name: disaster-recovery
+  color: "C5DEF5"
+  description: "Disaster Recovery and Business Continuity"
+
+- name: compliance
+  color: "5319E7"
+  description: "Compliance and governance"
+
+- name: cost-optimization
+  color: "F9D0C4"
+  description: "Cloud cost optimization"
+
+- name: high-priority
+  color: "D93F0B"
+  description: "Requires immediate attention"
+
+- name: low-priority
+  color: "C2E0C6"
+  description: "Low priority work item"

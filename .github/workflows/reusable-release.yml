@@ -1,0 +1,102 @@
+name: Reusable Release Workflow
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: Semantic version (e.g. v1.2.0)
+        required: true
+        type: string
+
+      artifact_name:
+        description: Name of uploaded artifact
+        required: false
+        default: application-build
+        type: string
+
+      draft:
+        description: Create draft release
+        required: false
+        default: false
+        type: boolean
+
+      prerelease:
+        description: Mark as prerelease
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+
+  release:
+
+    name: Publish GitHub Release
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #########################################
+      # Download Build Artifact
+      #########################################
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: release-artifacts
+
+      #########################################
+      # Create Git Tag
+      #########################################
+
+      - name: Create Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git rev-parse "${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "Tag already exists."
+          else
+            git tag "${{ inputs.version }}"
+            git push origin "${{ inputs.version }}"
+          fi
+
+      #########################################
+      # Create GitHub Release
+      #########################################
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: Release ${{ inputs.version }}
+          generate_release_notes: true
+          draft: ${{ inputs.draft }}
+          prerelease: ${{ inputs.prerelease }}
+          files: |
+            release-artifacts/**
+
+      #########################################
+      # Upload Release Summary
+      #########################################
+
+      - name: Release Summary
+        run: |
+          echo "Release successfully published."
+          echo "Version: ${{ inputs.version }}"
+          echo "Draft: ${{ inputs.draft }}"
+          echo "Prerelease: ${{ inputs.prerelease }}"

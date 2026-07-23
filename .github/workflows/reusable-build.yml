@@ -1,0 +1,184 @@
+name: Reusable Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      runtime:
+        description: Runtime to build (java|python|node)
+        required: true
+        type: string
+
+      runtime_version:
+        description: Runtime version
+        required: true
+        type: string
+
+      working_directory:
+        description: Project working directory
+        required: false
+        default: "."
+        type: string
+
+      artifact_name:
+        description: Build artifact name
+        required: false
+        default: application-build
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+
+    name: Build Application
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+
+    steps:
+
+      #########################################
+      # Checkout
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Java
+      #########################################
+
+      - name: Setup Java
+        if: inputs.runtime == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.runtime_version }}
+          cache: maven
+
+      #########################################
+      # Python
+      #########################################
+
+      - name: Setup Python
+        if: inputs.runtime == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.runtime_version }}
+          cache: pip
+
+      #########################################
+      # Node
+      #########################################
+
+      - name: Setup Node.js
+        if: inputs.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.runtime_version }}
+          cache: npm
+
+      #########################################
+      # Install Dependencies
+      #########################################
+
+      - name: Install Java Dependencies
+        if: inputs.runtime == 'java'
+        run: mvn -B dependency:resolve
+
+      - name: Install Python Dependencies
+        if: inputs.runtime == 'python'
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install Node Dependencies
+        if: inputs.runtime == 'node'
+        run: npm ci
+
+      #########################################
+      # Build
+      #########################################
+
+      - name: Build Java
+        if: inputs.runtime == 'java'
+        run: mvn -B clean package
+
+      - name: Build Python
+        if: inputs.runtime == 'python'
+        run: |
+          python -m compileall .
+
+      - name: Build Node
+        if: inputs.runtime == 'node'
+        run: npm run build
+
+      #########################################
+      # Tests
+      #########################################
+
+      - name: Test Java
+        if: inputs.runtime == 'java'
+        run: mvn test
+
+      - name: Test Python
+        if: inputs.runtime == 'python'
+        run: |
+          if [ -f pytest.ini ] || [ -d tests ]; then
+            pytest
+          fi
+
+      - name: Test Node
+        if: inputs.runtime == 'node'
+        run: |
+          if npm run | grep -q "test"; then
+            npm test
+          fi
+
+      #########################################
+      # Package Build Output
+      #########################################
+
+      - name: Package Artifact
+        run: |
+          mkdir -p artifact
+
+          if [ -d target ]; then
+            cp -R target artifact/
+          fi
+
+          if [ -d build ]; then
+            cp -R build artifact/
+          fi
+
+          if [ -d dist ]; then
+            cp -R dist artifact/
+          fi
+
+      #########################################
+      # Upload Artifact
+      #########################################
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: artifact
+          if-no-files-found: warn
+
+      #########################################
+      # Summary
+      #########################################
+
+      - name: Build Summary
+        run: |
+          echo "Reusable build workflow completed successfully."
+          echo "Runtime: ${{ inputs.runtime }}"
+          echo "Version: ${{ inputs.runtime_version }}"
+          echo "Working Directory: ${{ inputs.working_directory }}"

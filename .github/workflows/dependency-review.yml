@@ -1,0 +1,47 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+
+  dependency-review:
+
+    name: Dependency Review
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Dependency Review
+      #########################################
+
+      - name: Review Dependencies
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: critical
+          deny-licenses: GPL-2.0,GPL-3.0,AGPL-3.0
+          comment-summary-in-pr: always
+          retry-on-snapshot-warnings: true
+
+      #########################################
+      # Summary
+      #########################################
+
+      - name: Dependency Review Completed
+        run: |
+          echo "Dependency review completed successfully."
+          echo "No blocked dependencies or licenses detected."

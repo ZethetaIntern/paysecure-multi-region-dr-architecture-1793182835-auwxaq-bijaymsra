@@ -1,0 +1,94 @@
+name: Stale Issues and Pull Requests
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+
+  stale:
+
+    name: Mark Stale Issues and PRs
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Run Stale Bot
+        uses: actions/stale@v9
+        with:
+
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+          #########################################
+          # Issue Configuration
+          #########################################
+
+          days-before-issue-stale: 30
+          days-before-issue-close: 7
+
+          stale-issue-label: stale
+
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has
+            had no recent activity for 30 days.
+            If this issue is still relevant, please comment or update it.
+            Otherwise, it will be closed automatically in 7 days.
+
+          close-issue-message: >
+            Closing this issue due to prolonged inactivity.
+            Feel free to reopen it if additional work is required.
+
+          #########################################
+          # Pull Request Configuration
+          #########################################
+
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+
+          stale-pr-label: stale
+
+          stale-pr-message: >
+            This pull request has been automatically marked as stale because
+            it has had no recent activity for 30 days.
+            Please update it to keep it active.
+
+          close-pr-message: >
+            Closing this pull request due to inactivity.
+            It can be reopened when work resumes.
+
+          #########################################
+          # Exempt Labels
+          #########################################
+
+          exempt-issue-labels: >
+            security,
+            pinned,
+            enhancement,
+            infrastructure
+
+          exempt-pr-labels: >
+            security,
+            pinned,
+            enhancement,
+            infrastructure
+
+          #########################################
+          # General Settings
+          #########################################
+
+          remove-stale-when-updated: true
+
+          delete-branch: false
+
+          operations-per-run: 100
+
+          ascending: false
+
+          enable-statistics: true

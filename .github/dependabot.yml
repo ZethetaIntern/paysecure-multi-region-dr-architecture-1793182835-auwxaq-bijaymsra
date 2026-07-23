@@ -1,0 +1,81 @@
+version: 2
+
+updates:
+
+  #############################################
+  # GitHub Actions
+  #############################################
+
+  - package-ecosystem: "github-actions"
+
+    directory: "/"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 5
+
+    reviewers:
+      - "bijaymsra"
+
+    commit-message:
+      prefix: "ci"
+
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+    groups:
+
+      github-actions:
+        patterns:
+          - "*"
+
+  #############################################
+  # Terraform
+  #############################################
+
+  - package-ecosystem: "terraform"
+
+    directory: "/terraform"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 5
+
+    reviewers:
+      - "bijaymsra"
+
+    commit-message:
+      prefix: "terraform"
+
+    labels:
+      - "dependencies"
+      - "terraform"
+
+    groups:
+
+      terraform-providers:
+        patterns:
+          - "*"
+
+    ignore:
+
+      - dependency-name: "hashicorp/aws"
+        update-types:
+          - "version-update:semver-major"
+
+      - dependency-name: "hashicorp/kubernetes"
+        update-types:
+          - "version-update:semver-major"
+
+      - dependency-name: "hashicorp/helm"
+        update-types:
+          - "version-update:semver-major"

@@ -1,0 +1,84 @@
+######################################################
+# PaySecure Multi-Region DR Architecture
+# CODEOWNERS
+######################################################
+
+######################################################
+# Global Owners
+######################################################
+
+*                                   @bijaymsra
+
+######################################################
+# GitHub Configuration
+######################################################
+
+.github/                            @bijaymsra
+.github/workflows/                  @bijaymsra
+
+######################################################
+# Terraform
+######################################################
+
+terraform/                          @bijaymsra
+
+terraform/main.tf                   @bijaymsra
+terraform/providers.tf              @bijaymsra
+terraform/backend.tf                @bijaymsra
+terraform/versions.tf               @bijaymsra
+terraform/variables.tf              @bijaymsra
+terraform/outputs.tf                @bijaymsra
+
+######################################################
+# Terraform Modules
+######################################################
+
+terraform/modules/                  @bijaymsra
+
+terraform/modules/vpc/              @bijaymsra
+terraform/modules/security/         @bijaymsra
+terraform/modules/alb/              @bijaymsra
+terraform/modules/acm/              @bijaymsra
+terraform/modules/waf/              @bijaymsra
+terraform/modules/eks/              @bijaymsra
+terraform/modules/aurora/           @bijaymsra
+terraform/modules/rds_proxy/        @bijaymsra
+terraform/modules/redis/            @bijaymsra
+terraform/modules/msk/              @bijaymsra
+terraform/modules/s3/               @bijaymsra
+terraform/modules/route53/          @bijaymsra
+terraform/modules/cloudwatch/       @bijaymsra
+terraform/modules/backup/           @bijaymsra
+terraform/modules/iam/              @bijaymsra
+terraform/modules/secrets_manager/  @bijaymsra
+terraform/modules/lambda/           @bijaymsra
+terraform/modules/eventbridge/      @bijaymsra
+terraform/modules/sns/              @bijaymsra
+terraform/modules/sqs/              @bijaymsra
+terraform/modules/cloudtrail/       @bijaymsra
+terraform/modules/guardduty/        @bijaymsra
+terraform/modules/config/           @bijaymsra
+terraform/modules/securityhub/      @bijaymsra
+terraform/modules/inspector/        @bijaymsra
+
+######################################################
+# Environment Configurations
+######################################################
+
+terraform/environments/             @bijaymsra
+
+terraform/environments/dev/         @bijaymsra
+terraform/environments/prod/        @bijaymsra
+
+######################################################
+# Documentation
+######################################################
+
+docs/                               @bijaymsra
+README.md                           @bijaymsra
+
+######################################################
+# Future Automation
+######################################################
+
+scripts/                            @bijaymsra

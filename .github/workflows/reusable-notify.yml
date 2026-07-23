@@ -1,0 +1,140 @@
+name: Reusable Notification Workflow
+
+on:
+  workflow_call:
+    inputs:
+      title:
+        description: Notification title
+        required: true
+        type: string
+
+      message:
+        description: Notification message
+        required: true
+        type: string
+
+      status:
+        description: success | failure | cancelled
+        required: false
+        default: success
+        type: string
+
+      slack_enabled:
+        description: Send Slack notification
+        required: false
+        default: true
+        type: boolean
+
+      teams_enabled:
+        description: Send Microsoft Teams notification
+        required: false
+        default: false
+        type: boolean
+
+      email_enabled:
+        description: Send Email notification
+        required: false
+        default: false
+        type: boolean
+
+    secrets:
+      SLACK_WEBHOOK:
+        required: false
+      TEAMS_WEBHOOK:
+        required: false
+      SMTP_SERVER:
+        required: false
+      SMTP_PORT:
+        required: false
+      SMTP_USERNAME:
+        required: false
+      SMTP_PASSWORD:
+        required: false
+      EMAIL_TO:
+        required: false
+      EMAIL_FROM:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+
+  notify:
+
+    name: Send Notifications
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Notification Summary
+      #########################################
+
+      - name: Display Notification Summary
+        run: |
+          echo "Title   : ${{ inputs.title }}"
+          echo "Status  : ${{ inputs.status }}"
+          echo "Message : ${{ inputs.message }}"
+
+      #########################################
+      # Slack Notification
+      #########################################
+
+      - name: Send Slack Notification
+        if: inputs.slack_enabled && secrets.SLACK_WEBHOOK != ''
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "*${{ inputs.title }}*\nStatus: `${{ inputs.status }}`\n${{ inputs.message }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+      #########################################
+      # Microsoft Teams Notification
+      #########################################
+
+      - name: Send Teams Notification
+        if: inputs.teams_enabled && secrets.TEAMS_WEBHOOK != ''
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                     "text":"'"${{ inputs.title }}"'\nStatus: '"${{ inputs.status }}"'\n'"${{ inputs.message }}"'"
+                   }' \
+               "${{ secrets.TEAMS_WEBHOOK }}"
+
+      #########################################
+      # Email Notification
+      #########################################
+
+      - name: Send Email Notification
+        if: inputs.email_enabled && secrets.SMTP_SERVER != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "${{ inputs.title }} [${{ inputs.status }}]"
+          body: |
+            Status:
+            ${{ inputs.status }}
+
+            Message:
+            ${{ inputs.message }}
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+
+      #########################################
+      # Workflow Summary
+      #########################################
+
+      - name: Notification Complete
+        run: |
+          echo "Notification workflow completed successfully."
+          echo "Slack Enabled : ${{ inputs.slack_enabled }}"
+          echo "Teams Enabled : ${{ inputs.teams_enabled }}"
+          echo "Email Enabled : ${{ inputs.email_enabled }}"

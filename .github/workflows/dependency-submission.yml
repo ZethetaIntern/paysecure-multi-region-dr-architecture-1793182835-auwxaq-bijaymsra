@@ -1,0 +1,118 @@
+name: Dependency Submission
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+
+  dependency-submission:
+
+    name: Generate and Submit Dependency Inventory
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      #########################################
+      # Checkout Repository
+      #########################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Setup Node.js
+      #########################################
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      #########################################
+      # Setup Java
+      #########################################
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      #########################################
+      # Setup Python
+      #########################################
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      #########################################
+      # Generate SBOM
+      #########################################
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      #########################################
+      # Submit Dependency Graph
+      #########################################
+
+      - name: Submit Dependency Snapshot
+        uses: advanced-security/maven-dependency-submission-action@v4
+        continue-on-error: true
+
+      #########################################
+      # Upload SBOM Artifact
+      #########################################
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+          if-no-files-found: error
+
+      #########################################
+      # Workflow Summary
+      #########################################
+
+      - name: Publish Summary
+        run: |
+          {
+            echo "# Dependency Submission Summary"
+            echo ""
+            echo "## Completed"
+            echo "- Software Bill of Materials (SBOM) generated"
+            echo "- SPDX JSON artifact created"
+            echo "- Dependency Graph submission attempted"
+            echo "- Supply chain inventory updated"
+            echo ""
+            echo "Supported ecosystems:"
+            echo "- Terraform"
+            echo "- GitHub Actions"
+            echo "- Maven"
+            echo "- Python"
+            echo "- Node.js"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      #########################################
+      # Completion
+      #########################################
+
+      - name: Dependency Submission Complete
+        run: |
+          echo "Dependency inventory successfully generated."

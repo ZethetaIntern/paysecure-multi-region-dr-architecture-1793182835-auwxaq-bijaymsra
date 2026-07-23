@@ -1,0 +1,130 @@
+name-template: "v$NEXT_PATCH_VERSION"
+tag-template: "v$NEXT_PATCH_VERSION"
+
+categories:
+  - title: "🚀 Features"
+    labels:
+      - enhancement
+      - feature
+
+  - title: "🐛 Bug Fixes"
+    labels:
+      - bug
+      - fix
+
+  - title: "🏗 Infrastructure"
+    labels:
+      - infrastructure
+      - terraform
+
+  - title: "☁ AWS"
+    labels:
+      - aws
+
+  - title: "🔐 Security"
+    labels:
+      - security
+
+  - title: "⚙ CI/CD"
+    labels:
+      - ci
+      - github-actions
+
+  - title: "📚 Documentation"
+    labels:
+      - documentation
+      - docs
+
+  - title: "🧪 Testing"
+    labels:
+      - testing
+
+  - title: "⬆ Dependencies"
+    labels:
+      - dependencies
+
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  ---
+
+  ## Contributors
+
+  $CONTRIBUTORS
+
+  ---
+
+  ## Infrastructure Highlights
+
+  This release may include updates to:
+
+  - Terraform Modules
+  - AWS Infrastructure
+  - Kubernetes Platform
+  - Security Controls
+  - Monitoring & Observability
+  - Disaster Recovery Architecture
+  - GitHub Actions
+  - Documentation
+
+  ---
+
+  **Full Changelog:** https://github.com/bijaymsra/paysecure-multi-region-dr-architecture/compare/$PREVIOUS_TAG...$RESOLVED_VERSION
+
+exclude-labels:
+  - skip-release-notes
+  - duplicate
+  - invalid
+  - wontfix
+
+autolabeler:
+
+  - label: documentation
+    files:
+      - "*.md"
+      - "docs/**"
+
+  - label: terraform
+    files:
+      - "terraform/**"
+
+  - label: github-actions
+    files:
+      - ".github/workflows/**"
+
+  - label: infrastructure
+    files:
+      - "terraform/modules/**"
+      - "terraform/environments/**"
+
+  - label: security
+    files:
+      - ".github/SECURITY.md"
+
+version-resolver:
+
+  major:
+    labels:
+      - breaking-change
+
+  minor:
+    labels:
+      - enhancement
+      - feature
+
+  patch:
+    labels:
+      - bug
+      - fix
+      - documentation
+      - terraform
+      - infrastructure
+      - security
+      - dependencies
+      - ci
+
+  default: patch

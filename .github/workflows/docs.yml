@@ -1,0 +1,94 @@
+name: Documentation Quality
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "**/*.md"
+
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "**/*.md"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+
+  documentation:
+
+    name: Documentation Validation
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################
+      # Markdown Lint
+      #########################################
+
+      - name: Markdown Lint
+        uses: DavidAnson/markdownlint-cli2-action@v17
+        with:
+          globs: |
+            **/*.md
+
+      #########################################
+      # Markdown Link Check
+      #########################################
+
+      - name: Markdown Link Check
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          check-modified-files-only: "no"
+
+      #########################################
+      # Spell Check
+      #########################################
+
+      - name: Spell Check
+        uses: streetsidesoftware/cspell-action@v6
+        with:
+          files: |
+            **/*.md
+
+      #########################################
+      # README Validation
+      #########################################
+
+      - name: Verify README Exists
+        run: |
+          test -f README.md
+
+      #########################################
+      # Upload Documentation
+      #########################################
+
+      - name: Upload Documentation Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: |
+            README.md
+            docs/
+
+      #########################################
+      # Success
+      #########################################
+
+      - name: Documentation Validation Complete
+        run: |
+          echo "Documentation validation completed successfully."
