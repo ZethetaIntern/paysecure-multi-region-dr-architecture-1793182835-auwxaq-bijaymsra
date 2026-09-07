@@ -32,14 +32,14 @@ jobs:
     steps:
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       #########################################
       # Markdown Lint
       #########################################
 
       - name: Markdown Lint
-        uses: DavidAnson/markdownlint-cli2-action@v17
+        uses: DavidAnson/markdownlint-cli2-action@v24
         with:
           globs: |
             **/*.md
@@ -60,7 +60,7 @@ jobs:
       #########################################
 
       - name: Spell Check
-        uses: streetsidesoftware/cspell-action@v6
+        uses: streetsidesoftware/cspell-action@v9
         with:
           files: |
             **/*.md
@@ -78,7 +78,7 @@ jobs:
       #########################################
 
       - name: Upload Documentation Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: documentation
           path: |
