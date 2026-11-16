@@ -25,7 +25,7 @@ jobs:
       #########################################
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       #########################################
       # Verify Required Repository Files
@@ -109,7 +109,7 @@ jobs:
       #########################################
 
       - name: Upload Compliance Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: compliance-report
           path: compliance-report.md
