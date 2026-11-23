@@ -24,7 +24,7 @@ jobs:
       #########################################
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       #########################################
       # Collect Workflow Statistics
@@ -141,7 +141,7 @@ jobs:
       #########################################
 
       - name: Upload Dashboard
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: workflow-dashboard
           path: workflow-dashboard.md

@@ -84,7 +84,7 @@ jobs:
 
       - name: Send Slack Notification
         if: inputs.slack_enabled && secrets.SLACK_WEBHOOK != ''
-        uses: slackapi/slack-github-action@v1.27.0
+        uses: slackapi/slack-github-action@v4.0.0
         with:
           payload: |
             {
@@ -112,7 +112,7 @@ jobs:
 
       - name: Send Email Notification
         if: inputs.email_enabled && secrets.SMTP_SERVER != ''
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v24
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: ${{ secrets.SMTP_PORT }}
