@@ -25,10 +25,10 @@ jobs:
     steps:
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Sync Labels
-        uses: crazy-max/ghaction-github-labeler@v5
+        uses: crazy-max/ghaction-github-labeler@v6
         with:
           yaml-file: .github/labels.yml
         env:
